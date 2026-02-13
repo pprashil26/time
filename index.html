@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LineCal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Month Navigation Header -->
+  <div class="top-bar">
+    <button id="prevMonth">←</button>
+    <div id="monthLabel"></div>
+    <button id="nextMonth">→</button>
+  </div>
+
+  <!-- Scrollable Calendar -->
+  <div id="calendarContainer"></div>
+
+  <!-- Floating Add Button -->
+  <button id="addEventBtn">＋</button>
+
+  <!-- Inline Input Panel -->
+  <div id="inputPanel" class="hidden">
+    <input type="text" id="eventInput" placeholder="Enter event..." />
+    <button id="saveEventBtn">Save</button>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
