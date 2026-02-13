@@ -1,181 +1,170 @@
-// ====== DATA & STATE ======
-let data = JSON.parse(localStorage.getItem("lineCalData")) || {};
-let currentView = new Date();
-let currentViewYear = currentView.getFullYear();
-let currentViewMonth = currentView.getMonth(); // 0-indexed
-let selectedDate = null;
+// =====================
+// LineCal v1.1 Script
+// =====================
 
-// ====== ELEMENTS ======
-const calendarContainer = document.getElementById("calendarContainer");
-const monthLabel = document.getElementById("monthLabel");
-const prevMonthBtn = document.getElementById("prevMonth");
-const nextMonthBtn = document.getElementById("nextMonth");
-const addEventBtn = document.getElementById("addEventBtn");
-const inputPanel = document.getElementById("inputPanel");
-const eventInput = document.getElementById("eventInput");
-const saveEventBtn = document.getElementById("saveEventBtn");
+const calendarContainer = document.getElementById('calendarContainer');
+const monthLabel = document.getElementById('monthLabel');
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
+const addEventBtn = document.getElementById('addEventBtn');
+const inputPanel = document.getElementById('inputPanel');
+const eventInput = document.getElementById('eventInput');
+const saveEventBtn = document.getElementById('saveEventBtn');
 
-// ====== UTILITY ======
-function getMonthName(month) {
-  return new Date(0, month).toLocaleString('default', { month: 'long' });
-}
+let today = new Date();
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
+let selectedDay = today.getDate();
 
-function formatDate(y, m, d){
-  let mm = (m+1).toString().padStart(2,'0');
-  let dd = d.toString().padStart(2,'0');
-  return `${y}-${mm}-${dd}`;
-}
+// Load events from localStorage
+let lineCalData = JSON.parse(localStorage.getItem('lineCalData') || '{}');
 
-function daysInMonth(year, month){
-  return new Date(year, month+1,0).getDate();
-}
+// =====================
+// Month Names
+// =====================
+const monthNames = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+];
 
-// ====== RENDERING ======
-function renderCalendar(){
-  calendarContainer.innerHTML = "";
-  monthLabel.textContent = `${getMonthName(currentViewMonth)} ${currentViewYear}`;
+// =====================
+// Render Calendar
+// =====================
+function renderCalendar(month, year){
+  calendarContainer.innerHTML = '';
+  monthLabel.textContent = `${monthNames[month]} ${year}`;
 
-  const today = new Date();
-  const totalDays = daysInMonth(currentViewYear,currentViewMonth);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  for(let d=1; d<=totalDays; d++){
-    const dateStr = formatDate(currentViewYear,currentViewMonth,d);
-    const day = new Date(currentViewYear,currentViewMonth,d).toLocaleDateString('default',{weekday:'short'});
-
+  for(let day=1; day<=daysInMonth; day++){
     const dayRow = document.createElement('div');
     dayRow.classList.add('day-row');
-    dayRow.dataset.date = dateStr;
+    if(day === selectedDay) dayRow.classList.add('selected');
 
-    // Today highlight
-    if(currentViewYear===today.getFullYear() && currentViewMonth===today.getMonth() && d===today.getDate()){
-      dayRow.classList.add('today');
-    }
+    const isToday = (day === today.getDate() && month === today.getMonth() && year === today.getFullYear());
+    if(isToday) dayRow.classList.add('today');
 
-    // Day Left
+    // Day header
     const dayLeft = document.createElement('div');
     dayLeft.classList.add('day-left');
-    dayLeft.innerHTML = `<span class="day-name">${day}</span> <span class="day-number">${d}</span>`;
+    dayLeft.textContent = `${day}`;
     dayRow.appendChild(dayLeft);
 
     // Events container
     const dayEvents = document.createElement('div');
     dayEvents.classList.add('day-events');
 
-    if(data[dateStr]){
-      data[dateStr].forEach((evt,i)=>{
-        const evtDiv = document.createElement('div');
-        evtDiv.classList.add('event-item');
-        evtDiv.innerHTML = `<span class="event-text">${evt}</span><button class="delete-btn">✕</button>`;
-        evtDiv.querySelector('.delete-btn').addEventListener('click',()=>{
-          if(confirm("Delete this event?")){
-            data[dateStr].splice(i,1);
-            if(data[dateStr].length===0) delete data[dateStr];
-            localStorage.setItem("lineCalData",JSON.stringify(data));
-            renderCalendar();
+    const events = lineCalData[`${year}-${month+1}-${day}`] || [];
+    events.forEach((ev, idx) => {
+      const evDiv = document.createElement('div');
+      evDiv.classList.add('event-item');
+      evDiv.textContent = ev;
+
+      // Delete button
+      const delBtn = document.createElement('button');
+      delBtn.classList.add('delete-btn');
+      delBtn.textContent = '✕';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        if(confirm('Delete this event?')){
+          events.splice(idx,1);
+          if(events.length === 0){
+            delete lineCalData[`${year}-${month+1}-${day}`];
+          } else {
+            lineCalData[`${year}-${month+1}-${day}`] = events;
           }
-        });
-        dayEvents.appendChild(evtDiv);
-      });
-    }
+          localStorage.setItem('lineCalData', JSON.stringify(lineCalData));
+          renderCalendar(month, year);
+        }
+      };
+      evDiv.appendChild(delBtn);
+      dayEvents.appendChild(evDiv);
+    });
 
     dayRow.appendChild(dayEvents);
 
     // Day selection
-    dayRow.addEventListener('click',()=>{
-      document.querySelectorAll('.day-row').forEach(el=>el.classList.remove('selected'));
-      dayRow.classList.add('selected');
-      selectedDate = dateStr;
-    });
+    dayRow.onclick = () => {
+      selectedDay = day;
+      renderCalendar(currentMonth, currentYear);
+    };
 
     calendarContainer.appendChild(dayRow);
+  }
 
-    // Auto-select default day
-    if(!selectedDate){
-      const todayStr = formatDate(today.getFullYear(),today.getMonth(),today.getDate());
-      if(currentViewMonth===today.getMonth() && currentViewYear===today.getFullYear()){
-        selectedDate = todayStr;
-        dayRow.classList.add('selected');
-      } else if(d===1){
-        selectedDate = dateStr;
-        dayRow.classList.add('selected');
-      }
-    }
+  // Scroll selected day into view (desktop/journal feel)
+  const selectedRow = document.querySelector('.day-row.selected');
+  if(selectedRow){
+    selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 
-// ====== NAVIGATION ======
-prevMonthBtn.addEventListener('click',()=>{
-  currentViewMonth--;
-  if(currentViewMonth<0){
-    currentViewMonth=11;
-    currentViewYear--;
+// =====================
+// Month Navigation
+// =====================
+prevMonthBtn.onclick = () => {
+  currentMonth--;
+  if(currentMonth < 0){
+    currentMonth = 11;
+    currentYear--;
   }
-  selectedDate=null;
-  closeInputPanel();
-  renderCalendar();
-});
+  selectedDay = 1;
+  renderCalendar(currentMonth, currentYear);
+};
 
-nextMonthBtn.addEventListener('click',()=>{
-  currentViewMonth++;
-  if(currentViewMonth>11){
-    currentViewMonth=0;
-    currentViewYear++;
+nextMonthBtn.onclick = () => {
+  currentMonth++;
+  if(currentMonth > 11){
+    currentMonth = 0;
+    currentYear++;
   }
-  selectedDate=null;
-  closeInputPanel();
-  renderCalendar();
-});
+  selectedDay = 1;
+  renderCalendar(currentMonth, currentYear);
+};
 
-// ====== INPUT PANEL ======
-function openInputPanel(){
+// =====================
+// Add Event Panel
+// =====================
+addEventBtn.onclick = () => {
   inputPanel.classList.remove('hidden');
   eventInput.focus();
-}
+};
 
-function closeInputPanel(){
-  inputPanel.classList.add('hidden');
-  eventInput.value="";
-}
+saveEventBtn.onclick = () => {
+  let val = eventInput.value.trim();
+  if(val === ''){
+    inputPanel.classList.add('hidden');
+    return;
+  }
 
-addEventBtn.addEventListener('click',openInputPanel);
-
-// Save Event
-saveEventBtn.addEventListener('click',saveEvent);
-eventInput.addEventListener('keydown',(e)=>{
-  if(e.key==="Enter") saveEvent();
-});
-
-function saveEvent(){
-  let text = eventInput.value.trim();
-  if(!text) return;
-
-  let targetDate = selectedDate;
-
-  // Check for prefix override
-  const prefixMatch = text.match(/^(\d{1,2})\s(.+)/);
-  if(prefixMatch){
-    let dayNum = parseInt(prefixMatch[1],10);
-    const totalDays = daysInMonth(currentViewYear,currentViewMonth);
-    if(dayNum>=1 && dayNum<=totalDays){
-      targetDate = formatDate(currentViewYear,currentViewMonth,dayNum);
-      text = prefixMatch[2];
+  // Prefix override: "12 Meeting"
+  let dayOverride = selectedDay;
+  const match = val.match(/^(\d{1,2})\s+(.*)$/);
+  if(match){
+    const possibleDay = parseInt(match[1],10);
+    if(possibleDay >=1 && possibleDay <= new Date(currentYear, currentMonth+1,0).getDate()){
+      dayOverride = possibleDay;
+      val = match[2];
     }
   }
 
-  if(!data[targetDate]) data[targetDate]=[];
-  data[targetDate].push(text);
-  localStorage.setItem("lineCalData",JSON.stringify(data));
+  const key = `${currentYear}-${currentMonth+1}-${dayOverride}`;
+  if(!lineCalData[key]) lineCalData[key] = [];
+  lineCalData[key].push(val);
 
-  closeInputPanel();
-  renderCalendar();
-}
+  localStorage.setItem('lineCalData', JSON.stringify(lineCalData));
+  eventInput.value = '';
+  inputPanel.classList.add('hidden');
 
-// Close panel if click outside
-document.addEventListener('click', (e)=>{
-  if(!inputPanel.contains(e.target) && e.target!==addEventBtn){
-    closeInputPanel();
+  renderCalendar(currentMonth, currentYear);
+};
+
+// Close input panel on outside click
+document.addEventListener('click', (e) => {
+  if(!inputPanel.contains(e.target) && e.target !== addEventBtn){
+    inputPanel.classList.add('hidden');
   }
 });
 
-// ====== INITIAL RENDER ======
-renderCalendar();
+// Initialize calendar
+renderCalendar(currentMonth, currentYear);
