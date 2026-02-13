@@ -1,5 +1,5 @@
 // =====================
-// LineCal v1.1 Script
+// LineCal v1.2 Script
 // =====================
 
 const calendarContainer = document.getElementById('calendarContainer');
@@ -44,10 +44,12 @@ function renderCalendar(month, year){
     const isToday = (day === today.getDate() && month === today.getMonth() && year === today.getFullYear());
     if(isToday) dayRow.classList.add('today');
 
-    // Day header
+    // Day header with date first
+    const dayObj = new Date(year, month, day);
+    const dayName = dayObj.toLocaleDateString('en-US', { weekday: 'short' }); // Mon, Tue, etc.
     const dayLeft = document.createElement('div');
     dayLeft.classList.add('day-left');
-    dayLeft.textContent = `${day}`;
+    dayLeft.textContent = `${day} ${dayName}`; // 12 Mon
     dayRow.appendChild(dayLeft);
 
     // Events container
