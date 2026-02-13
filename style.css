@@ -5,9 +5,26 @@ body {
   font-family: 'Patrick Hand', sans-serif;
   margin: 0;
   padding: 0;
-  background: #1c1c1c; /* softer dark */
-  color: #e0e0e0; /* off-white text */
-  overflow-x: hidden;
+  background: #121212;
+  color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* =====================
+   Page Wrapper (journal-like)
+===================== */
+.page-wrapper {
+  max-width: 600px;
+  width: 100%;
+  margin: 24px auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  background: #1c1c1c;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  position: relative;
 }
 
 /* =====================
@@ -18,8 +35,7 @@ body {
   justify-content: center;
   align-items: center;
   gap: 40px;
-  padding: 8px 16px;
-  background: #222222; /* soft header */
+  padding: 6px 0;
   font-size: 16px;
   font-weight: normal;
 }
@@ -27,22 +43,34 @@ body {
 .top-bar button {
   background: none;
   border: none;
-  color: #b0b0b0; /* muted arrow */
+  color: #b0b0b0;
   font-size: 18px;
   cursor: pointer;
   transition: color 0.15s;
 }
 
 .top-bar button:hover {
-  color: #64b5f6; /* soft accent */
+  color: #64b5f6;
 }
 
 /* =====================
    Calendar Container
 ===================== */
 #calendarContainer {
-  padding: 6px 12px;
+  padding: 12px 0;
+  max-height: 80vh;
   overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for desktop */
+#calendarContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+#calendarContainer::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
 }
 
 /* =====================
@@ -51,14 +79,14 @@ body {
 .day-row {
   display: flex;
   flex-direction: column;
-  padding: 6px 0;
+  padding: 10px 0;
   border-radius: 6px;
   transition: background 0.15s;
 }
 
 .day-row.selected {
   border-left: 3px solid #64b5f6;
-  padding-left: 9px; /* adjust for border */
+  padding-left: 9px;
 }
 
 .day-row.today {
@@ -68,9 +96,9 @@ body {
 /* Day Info */
 .day-left {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 /* =====================
@@ -79,14 +107,14 @@ body {
 .day-events {
   display: flex;
   flex-direction: column;
-  margin-left: 10px; /* slight indentation */
+  margin-left: 10px;
 }
 
 .event-item {
   display: flex;
   justify-content: space-between;
-  padding: 2px 0;
-  font-size: 13px;
+  padding: 4px 0;
+  font-size: 14px;
   color: #dcdcdc;
 }
 
@@ -113,8 +141,8 @@ body {
 ===================== */
 #addEventBtn {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  bottom: 24px;
+  right: calc(50% - 300px + 16px);
   font-size: 26px;
   background: rgba(100,181,246,0.8);
   border: none;
@@ -137,8 +165,10 @@ body {
 #inputPanel {
   position: fixed;
   bottom: 16px;
-  left: 16px;
-  right: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 540px;
   display: flex;
   gap: 6px;
   background: rgba(28,28,28,0.95);
@@ -174,4 +204,25 @@ body {
 
 #inputPanel button:hover {
   background: rgba(100,181,246,1);
+}
+
+/* =====================
+   Responsive Adjustments
+===================== */
+@media(max-width: 640px){
+  .page-wrapper {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 12px;
+  }
+  #addEventBtn {
+    right: 16px;
+    transform: none;
+  }
+  #inputPanel {
+    left: 16px;
+    transform: none;
+    width: calc(100% - 32px);
+  }
 }
