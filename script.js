@@ -1,7 +1,4 @@
 const calendarContainer = document.getElementById('calendarContainer');
-const monthLabel = document.getElementById('monthLabel');
-const prevMonthBtn = document.getElementById('prevMonth');
-const nextMonthBtn = document.getElementById('nextMonth');
 const goTodayBtn = document.getElementById('goToday');
 const addEventBtn = document.getElementById('addEventBtn');
 const inputPanel = document.getElementById('inputPanel');
@@ -9,124 +6,118 @@ const eventInput = document.getElementById('eventInput');
 const saveEventBtn = document.getElementById('saveEventBtn');
 
 let today = new Date();
-let currentMonth = today.getMonth();
-let currentYear = today.getFullYear();
-let selectedDay = today.getDate();
-
+let selectedDate = new Date(today);
 let lineCalData = JSON.parse(localStorage.getItem('lineCalData') || '{}');
 
-const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-function renderCalendar(month, year){
-  calendarContainer.innerHTML = '';
-  monthLabel.textContent = `${monthNames[month]} ${year}`;
-  const daysInMonth = new Date(year, month+1,0).getDate();
-
-  for(let day=1; day<=daysInMonth; day++){
-    const dayRow = document.createElement('div');
-    dayRow.classList.add('day-row');
-    if(day===selectedDay) dayRow.classList.add('selected');
-    const isToday = (day===today.getDate() && month===today.getMonth() && year===today.getFullYear());
-    if(isToday) dayRow.classList.add('today');
-
-    const dayObj = new Date(year, month, day);
-    const dayName = dayObj.toLocaleDateString('en-US',{weekday:'short'});
-
-    const dayLeft = document.createElement('div');
-    dayLeft.classList.add('day-left');
-
-    const dayLabel = document.createElement('span');
-    dayLabel.classList.add('day-label');
-    dayLabel.textContent = `${day} ${dayName}`;
-    dayLeft.appendChild(dayLabel);
-
-    const events = lineCalData[`${year}-${month+1}-${day}`] || [];
-    events.forEach((ev, idx)=>{
-      const evSpan = document.createElement('span');
-      evSpan.classList.add('event-item');
-      evSpan.textContent = ev;
-
-      const delBtn = document.createElement('button');
-      delBtn.classList.add('delete-btn');
-      delBtn.textContent = '×';
-      delBtn.onclick = (e)=>{
-        e.stopPropagation();
-        if(confirm('Delete this event?')){
-          events.splice(idx,1);
-          if(events.length===0) delete lineCalData[`${year}-${month+1}-${day}`];
-          else lineCalData[`${year}-${month+1}-${day}`]=events;
-          localStorage.setItem('lineCalData', JSON.stringify(lineCalData));
-          renderCalendar(month,year);
-        }
-      };
-      evSpan.appendChild(delBtn);
-      dayLeft.appendChild(evSpan);
-    });
-
-    dayRow.appendChild(dayLeft);
-    dayRow.onclick = ()=>{ selectedDay=day; renderCalendar(currentMonth,currentYear); };
-    calendarContainer.appendChild(dayRow);
-  }
-
-  const selectedRow = document.querySelector('.day-row.selected');
-  if(selectedRow) selectedRow.scrollIntoView({behavior:'smooth', block:'center'});
+// Helper to format YYYY-M-D key
+function formatKey(date){
+    return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
 }
 
-prevMonthBtn.onclick = ()=>{
-  currentMonth--;
-  if(currentMonth<0){currentMonth=11; currentYear--;}
-  selectedDay=1;
-  renderCalendar(currentMonth,currentYear);
-};
+// Render continuous days around anchor date
+function renderDays(anchorDate, daysBefore=30, daysAfter=30){
+    calendarContainer.innerHTML = '';
 
-nextMonthBtn.onclick = ()=>{
-  currentMonth++;
-  if(currentMonth>11){currentMonth=0; currentYear++;}
-  selectedDay=1;
-  renderCalendar(currentMonth,currentYear);
-};
+    const startDate = new Date(anchorDate);
+    startDate.setDate(startDate.getDate() - daysBefore);
 
-/* NEW: Go to Today */
-goTodayBtn.onclick = ()=>{
-  const now = new Date();
-  currentMonth = now.getMonth();
-  currentYear = now.getFullYear();
-  selectedDay = now.getDate();
-  renderCalendar(currentMonth,currentYear);
-};
+    const totalDays = daysBefore + daysAfter + 1;
 
-addEventBtn.onclick = ()=>{
-  inputPanel.classList.remove('hidden');
-  eventInput.focus();
-};
+    for(let i=0; i<totalDays; i++){
+        const dayObj = new Date(startDate);
+        dayObj.setDate(startDate.getDate() + i);
 
-saveEventBtn.onclick = ()=>{
-  let val = eventInput.value.trim();
-  if(val===''){inputPanel.classList.add('hidden'); return;}
+        const year = dayObj.getFullYear();
+        const month = dayObj.getMonth();
+        const day = dayObj.getDate();
 
-  let dayOverride = selectedDay;
-  const match = val.match(/^(\d{1,2})\s+(.*)$/);
-  if(match){
-    const possibleDay = parseInt(match[1],10);
-    if(possibleDay>=1 && possibleDay<=new Date(currentYear,currentMonth+1,0).getDate()){
-      dayOverride = possibleDay;
-      val = match[2];
+        const dayRow = document.createElement('div');
+        dayRow.classList.add('day-row');
+
+        // Highlight today
+        if(dayObj.toDateString() === today.toDateString()) dayRow.classList.add('today');
+        // Highlight selected
+        if(dayObj.toDateString() === selectedDate.toDateString()) dayRow.classList.add('selected');
+
+        const dayLeft = document.createElement('div');
+        dayLeft.classList.add('day-left');
+
+        const dayName = dayObj.toLocaleDateString('en-US',{weekday:'short'});
+        const dayLabel = document.createElement('span');
+        dayLabel.classList.add('day-label');
+        dayLabel.textContent = `${day} ${dayName}`;
+        dayLeft.appendChild(dayLabel);
+
+        const key = formatKey(dayObj);
+        const events = lineCalData[key] || [];
+        events.forEach((ev, idx)=>{
+            const evSpan = document.createElement('span');
+            evSpan.classList.add('event-item');
+            evSpan.textContent = ev;
+
+            const delBtn = document.createElement('button');
+            delBtn.classList.add('delete-btn');
+            delBtn.textContent = '×';
+            delBtn.onclick = (e)=>{
+                e.stopPropagation();
+                if(confirm('Delete this event?')){
+                    events.splice(idx,1);
+                    if(events.length===0) delete lineCalData[key];
+                    else lineCalData[key]=events;
+                    localStorage.setItem('lineCalData', JSON.stringify(lineCalData));
+                    renderDays(selectedDate);
+                }
+            };
+            evSpan.appendChild(delBtn);
+            dayLeft.appendChild(evSpan);
+        });
+
+        dayRow.appendChild(dayLeft);
+        dayRow.onclick = ()=>{
+            selectedDate = new Date(dayObj);
+            renderDays(selectedDate);
+        };
+
+        calendarContainer.appendChild(dayRow);
     }
-  }
 
-  const key = `${currentYear}-${currentMonth+1}-${dayOverride}`;
-  if(!lineCalData[key]) lineCalData[key]=[];
-  lineCalData[key].push(val);
+    // Scroll selected day into view
+    const selectedRow = document.querySelector('.day-row.selected');
+    if(selectedRow) selectedRow.scrollIntoView({behavior:'smooth', block:'center'});
+}
 
-  localStorage.setItem('lineCalData', JSON.stringify(lineCalData));
-  eventInput.value='';
-  inputPanel.classList.add('hidden');
-  renderCalendar(currentMonth,currentYear);
+// Add event button
+addEventBtn.onclick = ()=>{
+    inputPanel.classList.remove('hidden');
+    eventInput.focus();
 };
 
-document.addEventListener('click',(e)=>{
-  if(!inputPanel.contains(e.target) && e.target!==addEventBtn)
+// Save event
+saveEventBtn.onclick = ()=>{
+    let val = eventInput.value.trim();
+    if(val===''){inputPanel.classList.add('hidden'); return;}
+
+    const key = formatKey(selectedDate);
+    if(!lineCalData[key]) lineCalData[key]=[];
+    lineCalData[key].push(val);
+
+    localStorage.setItem('lineCalData', JSON.stringify(lineCalData));
+    eventInput.value='';
     inputPanel.classList.add('hidden');
+    renderDays(selectedDate);
+};
+
+// Go to today
+goTodayBtn.onclick = ()=>{
+    selectedDate = new Date(today);
+    renderDays(selectedDate);
+};
+
+// Hide input panel when clicking outside
+document.addEventListener('click',(e)=>{
+    if(!inputPanel.contains(e.target) && e.target!==addEventBtn)
+        inputPanel.classList.add('hidden');
 });
 
-renderCalendar(currentMonth,currentYear);
+// Initial render
+renderDays(selectedDate);
