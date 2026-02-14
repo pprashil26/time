@@ -39,19 +39,14 @@ function renderDays(anchorDate, daysBefore=30, daysAfter=30){
         // Highlight selected
         if(dayObj.toDateString() === selectedDate.toDateString()) dayRow.classList.add('selected');
 
-        // Weekend classes
-        const weekday = dayObj.getDay();
-        if(weekday === 6) dayRow.classList.add('saturday'); // Saturday
-        if(weekday === 0) dayRow.classList.add('sunday');   // Sunday
-
         const dayLeft = document.createElement('div');
         dayLeft.classList.add('day-left');
 
-        // New date format: YYYY-M-D XX (weekday in uppercase)
+        // New date format: year light color
         const weekdayAbbr = dayObj.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase();
         const dayLabel = document.createElement('span');
         dayLabel.classList.add('day-label');
-        dayLabel.textContent = `${year}-${month+1}-${day} ${weekdayAbbr}`;
+        dayLabel.innerHTML = `<span class="year-light">${year}</span>-${month+1}-${day} ${weekdayAbbr}`;
         dayLeft.appendChild(dayLabel);
 
         const key = formatKey(dayObj);
