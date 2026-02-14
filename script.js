@@ -2,6 +2,7 @@ const calendarContainer = document.getElementById('calendarContainer');
 const monthLabel = document.getElementById('monthLabel');
 const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
+const goTodayBtn = document.getElementById('goToday');
 const addEventBtn = document.getElementById('addEventBtn');
 const inputPanel = document.getElementById('inputPanel');
 const eventInput = document.getElementById('eventInput');
@@ -72,13 +73,26 @@ function renderCalendar(month, year){
 }
 
 prevMonthBtn.onclick = ()=>{
-  currentMonth--; if(currentMonth<0){currentMonth=11; currentYear--;}
-  selectedDay=1; renderCalendar(currentMonth,currentYear);
+  currentMonth--;
+  if(currentMonth<0){currentMonth=11; currentYear--;}
+  selectedDay=1;
+  renderCalendar(currentMonth,currentYear);
 };
 
 nextMonthBtn.onclick = ()=>{
-  currentMonth++; if(currentMonth>11){currentMonth=0; currentYear++;}
-  selectedDay=1; renderCalendar(currentMonth,currentYear);
+  currentMonth++;
+  if(currentMonth>11){currentMonth=0; currentYear++;}
+  selectedDay=1;
+  renderCalendar(currentMonth,currentYear);
+};
+
+/* NEW: Go to Today */
+goTodayBtn.onclick = ()=>{
+  const now = new Date();
+  currentMonth = now.getMonth();
+  currentYear = now.getFullYear();
+  selectedDay = now.getDate();
+  renderCalendar(currentMonth,currentYear);
 };
 
 addEventBtn.onclick = ()=>{
@@ -111,7 +125,8 @@ saveEventBtn.onclick = ()=>{
 };
 
 document.addEventListener('click',(e)=>{
-  if(!inputPanel.contains(e.target) && e.target!==addEventBtn) inputPanel.classList.add('hidden');
+  if(!inputPanel.contains(e.target) && e.target!==addEventBtn)
+    inputPanel.classList.add('hidden');
 });
 
 renderCalendar(currentMonth,currentYear);
