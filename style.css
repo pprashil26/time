@@ -64,6 +64,14 @@ body {
   background: rgba(255,255,255,0.05);
 }
 
+.saturday {
+  background: rgba(170,255,200,0.1);
+}
+
+.sunday {
+  background: rgba(170,255,200,0.1);
+}
+
 .day-left {
   display: flex;
   flex-wrap: wrap;
