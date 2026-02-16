@@ -15,7 +15,7 @@ function formatKey(date){
 }
 
 // Render continuous days around anchor date
-function renderDays(anchorDate, daysBefore=30, daysAfter=30){
+function renderDays(anchorDate, daysBefore=30, daysAfter=366){
     calendarContainer.innerHTML = '';
 
     const startDate = new Date(anchorDate);
